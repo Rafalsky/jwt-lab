@@ -2,7 +2,7 @@
 
 ## Milestone 0 — repo i tooling
 - [ ] Create repo + basic directories (`services/`, `infra/`, `docs/`)
-- [ ] Docker Compose: issuer + api + web + redis (healthchecks)
+- [x] Docker Compose: issuer + api + web + redis (healthchecks)
 - [ ] Common config TypeScript (tsconfig), ESLint, prettier
 
 ## Milestone 1 — JWT fundamentals (offline verification)

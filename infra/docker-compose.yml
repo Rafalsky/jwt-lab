@@ -1,0 +1,93 @@
+# infra/docker-compose.yml
+services:
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "no"]
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 2s
+      retries: 20
+    networks: [jwtlab]
+
+  issuer:
+    build:
+      context: ../services/issuer
+      dockerfile: Dockerfile
+    environment:
+      - PORT=4000
+      - NODE_ENV=development
+      - REDIS_URL=redis://redis:6379
+      - ISSUER=http://issuer:4000
+      - AUDIENCE=jwt-lab-api
+      # shared secret for lab-only internal calls (e.g. /introspect auth)
+      - INTROSPECT_SHARED_SECRET=dev-secret-change-me
+    ports:
+      - "4000:4000"
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:4000/health"]
+      interval: 5s
+      timeout: 2s
+      retries: 30
+    networks: [jwtlab]
+
+  api:
+    build:
+      context: ../services/api
+      dockerfile: Dockerfile
+    environment:
+      - PORT=5000
+      - NODE_ENV=development
+      - ISSUER=http://issuer:4000
+      - ISSUER_JWKS_URL=http://issuer:4000/.well-known/jwks.json
+      - AUDIENCE=jwt-lab-api
+      # jwt | introspect
+      - AUTH_MODE=jwt
+      - INTROSPECT_URL=http://issuer:4000/introspect
+      - INTROSPECT_SHARED_SECRET=dev-secret-change-me
+      # cookie-based CSRF demo uses same origin checks
+      - WEB_ORIGIN=http://localhost:3000
+    ports:
+      - "5000:5000"
+    depends_on:
+      issuer:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:5000/health"]
+      interval: 5s
+      timeout: 2s
+      retries: 30
+    networks: [jwtlab]
+
+  web:
+    build:
+      context: ../services/web
+      dockerfile: Dockerfile
+    environment:
+      - PORT=3000
+      - NODE_ENV=development
+      - ISSUER_PUBLIC=http://localhost:4000
+      - API_PUBLIC=http://localhost:5000
+      # internal docker network addresses for server-to-server calls (optional)
+      - ISSUER_INTERNAL=http://issuer:4000
+      - API_INTERNAL=http://api:5000
+    ports:
+      - "3000:3000"
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/health"]
+      interval: 5s
+      timeout: 2s
+      retries: 30
+    networks: [jwtlab]
+
+networks:
+  jwtlab:
+    driver: bridge
