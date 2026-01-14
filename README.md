@@ -64,7 +64,7 @@ Services (Docker):
 ## How to run
 
 ```bash
-docker compose up --build
+docker compose -f infra/docker-compose.yml up --build
 ```
 
 Then open:

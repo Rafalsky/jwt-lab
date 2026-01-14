@@ -1,9 +1,9 @@
 # TODO
 
 ## Milestone 0 — repo i tooling
-- [ ] Create repo + basic directories (`services/`, `infra/`, `docs/`)
+- [x] Create repo + basic directories (`services/`, `infra/`, `docs/`)
 - [x] Docker Compose: issuer + api + web + redis (healthchecks)
-- [ ] Common config TypeScript (tsconfig), ESLint, prettier
+- [x] Common config TypeScript (tsconfig), ESLint, prettier
 
 ## Milestone 1 — JWT fundamentals (offline verification)
 - [ ] Issuer generates kay pairs (dev) i signs JWT (RS256)
